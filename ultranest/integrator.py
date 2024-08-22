@@ -428,6 +428,7 @@ class NestedSampler:
                  log_dir='logs/test',
                  num_live_points=1000,
                  vectorized=False,
+                 mpi=True,
                  wrapped_params=[],
                  ):
         """Set up nested sampler.
@@ -510,14 +511,18 @@ class NestedSampler:
         self.loglike = safe_loglike
 
         self.use_mpi = False
-        try:
-            from mpi4py import MPI
-            self.comm = MPI.COMM_WORLD
-            self.mpi_size = self.comm.Get_size()
-            self.mpi_rank = self.comm.Get_rank()
-            if self.mpi_size > 1:
-                self.use_mpi = True
-        except Exception:
+        if mpi:
+            try:
+                from mpi4py import MPI
+                self.comm = MPI.COMM_WORLD
+                self.mpi_size = self.comm.Get_size()
+                self.mpi_rank = self.comm.Get_rank()
+                if self.mpi_size > 1:
+                    self.use_mpi = True
+            except Exception:
+                self.mpi_size = 1
+                self.mpi_rank = 0
+        else:
             self.mpi_size = 1
             self.mpi_rank = 0
 
@@ -1040,6 +1045,7 @@ class ReactiveNestedSampler:
                  draw_multiple=True,
                  num_bootstraps=30,
                  vectorized=False,
+                 mpi=False,
                  ndraw_min=128,
                  ndraw_max=65536,
                  storage_backend='hdf5',
@@ -1139,15 +1145,19 @@ class ReactiveNestedSampler:
             self.wrapped_axes = np.where(wrapped_params)[0]
 
         self.use_mpi = False
-        try:
-            from mpi4py import MPI
-            self.comm = MPI.COMM_WORLD
-            self.mpi_size = self.comm.Get_size()
-            self.mpi_rank = self.comm.Get_rank()
-            if self.mpi_size > 1:
-                self.use_mpi = True
-                self._setup_distributed_seeds()
-        except Exception:
+        if mpi:
+            try:
+                from mpi4py import MPI
+                self.comm = MPI.COMM_WORLD
+                self.mpi_size = self.comm.Get_size()
+                self.mpi_rank = self.comm.Get_rank()
+                if self.mpi_size > 1:
+                    self.use_mpi = True
+                    self._setup_distributed_seeds()
+            except Exception:
+                self.mpi_size = 1
+                self.mpi_rank = 0
+        else:
             self.mpi_size = 1
             self.mpi_rank = 0
 
